@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Downloader & Arquivos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        primary: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-darkBg text-slate-200 min-h-screen font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Inicializar Supabase (Substitua pelas suas credenciais)
+        const supabaseUrl = 'https://ufeaaxhfbvwzdwrpnyuw.supabase.co';
+        const supabaseKey = 'sb_publishable_dSEnTuEnicKoUkCBWMST4Q_8mVgy2Y_';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        function App() {
+            const [items, setItems] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [abaAtiva, setAbaAtiva] = useState('novo'); // 'novo' ou 'lista'
+            
+            // Estados do Formulário
+            const [titulo, setTitulo] = useState('');
+            const [tipo, setTipo] = useState('codigo'); // codigo, link, arquivo
+            const [valor, setValor] = useState(''); // Para código ou link
+            const [arquivo, setArquivo] = useState(null);
+            const [descricao, setDescricao] = useState('');
+
+            useEffect(() => {
+                fetchItems();
+            }, []);
+
+            const fetchItems = async () => {
+                const { data, error } = await supabase
+                    .from('downloader_items')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) console.error("Erro ao buscar:", error);
+                else setItems(data);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                
+                let valorFinal = valor;
+
+                // Se for arquivo, faz o upload primeiro
+                if (tipo === 'arquivo' && arquivo) {
+                    const fileExt = arquivo.name.split('.').pop();
+                    const fileName = `${Math.random()}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('arquivos_leves')
+                        .upload(fileName, arquivo);
+                        
+                    if (uploadError) {
+                        alert("Erro no upload do arquivo.");
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    // Pega a URL pública do arquivo
+                    const { data: publicUrlData } = supabase.storage
+                        .from('arquivos_leves')
+                        .getPublicUrl(fileName);
+                        
+                    valorFinal = publicUrlData.publicUrl;
+                }
+
+                // Salva no banco de dados
+                const { error } = await supabase
+                    .from('downloader_items')
+                    .insert([{ 
+                        titulo, 
+                        tipo, 
+                        valor: valorFinal, 
+                        descricao 
+                    }]);
+
+                if (error) {
+                    alert("Erro exato: " + error.message);
+                } else {
+                    alert("Item salvo com sucesso!");
+                    setTitulo(''); setValor(''); setArquivo(null); setDescricao('');
+                    fetchItems();
+                    setAbaAtiva('lista');
+                }
+                setLoading(false);
+            };
+
+            const deletarItem = async (id, tipoItem, valorItem) => {
+                if(!confirm("Tem certeza que deseja deletar?")) return;
+                
+                // Se for arquivo, deleta do storage também
+                if (tipoItem === 'arquivo') {
+                    const fileName = valorItem.split('/').pop();
+                    await supabase.storage.from('arquivos_leves').remove([fileName]);
+                }
+
+                await supabase.from('downloader_items').delete().eq('id', id);
+                fetchItems();
+            };
+
+            return (
+                <div class="max-w-5xl mx-auto p-4 md:p-8">
+                    {/* Cabeçalho */}
+                    <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <i class="ph ph-cloud-arrow-down text-4xl text-primary"></i>
+                            <div>
+                                <h1 class="text-2xl font-bold text-white">Downloader Hub</h1>
+                                <p class="text-sm text-slate-400">Gerencie códigos, links e arquivos</p>
+                            </div>
+                        </div>
+                        <div class="flex bg-darkCard rounded-lg p-1">
+                            <button 
+                                onClick={() => setAbaAtiva('novo')}
+                                class={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${abaAtiva === 'novo' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                <i class="ph ph-plus mr-2"></i>Novo Item
+                            </button>
+                            <button 
+                                onClick={() => setAbaAtiva('lista')}
+                                class={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${abaAtiva === 'lista' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                <i class="ph ph-list mr-2"></i>Meus Itens
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Área de Conteúdo */}
+                    {abaAtiva === 'novo' ? (
+                        <div class="bg-darkCard p-6 rounded-xl shadow-lg border border-slate-800 max-w-2xl mx-auto">
+                            <form onSubmit={handleSubmit} class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-400 mb-1">Título</label>
+                                    <input required type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary" placeholder="Ex: App de Esportes v2" />
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-400 mb-1">Tipo de Item</label>
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="tipo" checked={tipo === 'codigo'} onChange={() => setTipo('codigo')} class="text-primary focus:ring-primary" />
+                                            <span>Código Downloader</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="tipo" checked={tipo === 'link'} onChange={() => setTipo('link')} class="text-primary focus:ring-primary" />
+                                            <span>Link URL</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="tipo" checked={tipo === 'arquivo'} onChange={() => setTipo('arquivo')} class="text-primary focus:ring-primary" />
+                                            <span>Hospedar Arquivo</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {tipo === 'codigo' && (
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-400 mb-1">Código (Ex: 12345)</label>
+                                        <input required type="text" value={valor} onChange={(e) => setValor(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary" />
+                                    </div>
+                                )}
+
+                                {tipo === 'link' && (
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-400 mb-1">URL / Link Direto</label>
+                                        <input required type="url" value={valor} onChange={(e) => setValor(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary" placeholder="https://..." />
+                                    </div>
+                                )}
+
+                                {tipo === 'arquivo' && (
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-400 mb-1">Selecione o Arquivo</label>
+                                        <input required type="file" onChange={(e) => setArquivo(e.target.files[0])} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-600" />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-400 mb-1">Descrição (Opcional)</label>
+                                    <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary h-24"></textarea>
+                                </div>
+
+                                <button disabled={loading} type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-medium py-3 rounded-lg transition-colors flex justify-center items-center gap-2">
+                                    {loading ? <i class="ph ph-spinner animate-spin text-xl"></i> : <i class="ph ph-floppy-disk text-xl"></i>}
+                                    {loading ? 'Salvando...' : 'Salvar Item'}
+                                </button>
+                            </form>
+                        </div>
+                    ) : (
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {items.map(item => (
+                                <div key={item.id} class="bg-darkCard p-5 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-600 transition-colors">
+                                    <div>
+                                        <div class="flex justify-between items-start mb-3">
+                                            <div class="flex items-center gap-2">
+                                                {item.tipo === 'codigo' && <span class="bg-orange-500/20 text-orange-400 p-1.5 rounded-lg"><i class="ph ph-hash text-xl"></i></span>}
+                                                {item.tipo === 'link' && <span class="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg"><i class="ph ph-link text-xl"></i></span>}
+                                                {item.tipo === 'arquivo' && <span class="bg-green-500/20 text-green-400 p-1.5 rounded-lg"><i class="ph ph-file-zip text-xl"></i></span>}
+                                                <h3 class="font-semibold text-lg text-white line-clamp-1">{item.titulo}</h3>
+                                            </div>
+                                            <button onClick={() => deletarItem(item.id, item.tipo, item.valor)} class="text-slate-500 hover:text-red-400 transition-colors">
+                                                <i class="ph ph-trash text-xl"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        {item.descricao && <p class="text-sm text-slate-400 mb-4 line-clamp-2">{item.descricao}</p>}
+                                        
+                                        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center justify-between mt-auto">
+                                            <span class="text-white font-mono text-sm truncate mr-2">
+                                                {item.tipo === 'codigo' ? item.valor : 'Acessar URL / Arquivo'}
+                                            </span>
+                                            <button 
+                                                onClick={() => {
+                                                    if(item.tipo === 'codigo') {
+                                                        navigator.clipboard.writeText(item.valor);
+                                                        alert('Código copiado!');
+                                                    } else {
+                                                        window.open(item.valor, '_blank');
+                                                    }
+                                                }}
+                                                class="text-primary hover:text-blue-400"
+                                            >
+                                                {item.tipo === 'codigo' ? <i class="ph ph-copy text-xl"></i> : <i class="ph ph-arrow-square-out text-xl"></i>}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {items.length === 0 && (
+                                <div class="col-span-full text-center py-12 text-slate-500">
+                                    <i class="ph ph-empty text-5xl mb-3"></i>
+                                    <p>Nenhum item salvo ainda.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
