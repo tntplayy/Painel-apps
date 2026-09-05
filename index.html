@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <!-- Container separado exclusivo para o Modal (Evita piscar a tela inteira) -->
+    <!-- Container do Modal Isolado -->
     <div id="modal-container"></div>
 
     <script type="module">
@@ -196,21 +196,16 @@
             window.buscarClientes();
         };
 
-        // Renderiza separadamente o Modal para evitar piscar a tela principal
         window.renderModal = function() {
             const modalContainer = document.getElementById('modal-container');
             if (!isModalOpen) {
                 modalContainer.innerHTML = '';
                 return;
             }
-
-            // Se já estiver aberto na tela, não recria o HTML para evitar a piscada
-            if (document.getElementById('modal-box')) {
-                return;
-            }
+            if (document.getElementById('modal-box')) return;
 
             modalContainer.innerHTML = `
-                <div id="modal-box" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]">
+                <div id="modal-box" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
                     <div class="bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-800 relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600"></div>
                         
@@ -305,31 +300,31 @@
 
             app.innerHTML = `
                 <div class="flex flex-col md:flex-row h-full tech-grid pb-16 md:pb-0">
-                    <!-- SIDEBAR DESKTOP & MENU INFERIOR MOBILE -->
-                    <aside class="order-2 md:order-1 w-full md:w-64 bg-slate-900/95 md:bg-slate-900/90 backdrop-blur-md border-t md:border-t-0 md:border-r border-slate-800 flex md:flex-col justify-between flex-shrink-0 z-20 shadow-2xl fixed md:static bottom-0 left-0">
+                    <!-- SIDEBAR FIXA E ALINHADA -->
+                    <aside class="order-2 md:order-1 w-full md:w-64 bg-slate-900 border-t md:border-t-0 md:border-r border-slate-800 flex md:flex-col justify-between flex-shrink-0 z-20 shadow-2xl fixed md:static bottom-0 left-0">
                         <div class="hidden md:block p-6">
                             <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-wider">AUTOLOG PRO</h1>
                             <span class="text-[10px] text-slate-500 uppercase tracking-widest">Painel do Filiado</span>
                         </div>
                         
-                        <nav class="flex md:flex-col w-full px-2 py-2 md:py-0 md:space-y-2 justify-around md:justify-start">
-                            <button onclick="window.mudarAba('dashboard')" class="${currentTab === 'dashboard' ? 'md:bg-slate-800/80 text-cyan-400 md:border-l-4 border-cyan-500' : 'text-slate-400 hover:text-slate-200'} flex-1 md:flex-none flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:px-4 md:py-3 rounded-xl transition-all font-bold group">
-                                <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                                <span class="text-[10px] md:text-sm">Dashboard</span>
+                        <nav class="flex md:flex-col w-full px-2 py-2 md:py-0 md:space-y-1.5 justify-around md:justify-start">
+                            <button onclick="window.mudarAba('dashboard')" class="${currentTab === 'dashboard' ? 'bg-slate-800 text-cyan-400 md:border-l-4 border-cyan-500' : 'text-slate-400 hover:text-slate-200'} flex-1 md:flex-none flex flex-col md:flex-row items-center gap-1.5 md:gap-3.5 p-2.5 md:px-5 md:py-3.5 md:rounded-r-xl transition-all font-bold group">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                <span class="text-[11px] md:text-sm">Dashboard</span>
                             </button>
                             
-                            <button onclick="window.mudarAba('clientes')" class="${currentTab === 'clientes' ? 'md:bg-slate-800/80 text-cyan-400 md:border-l-4 border-cyan-500' : 'text-slate-400 hover:text-slate-200'} flex-1 md:flex-none flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:px-4 md:py-3 rounded-xl transition-all font-bold group">
-                                <svg class="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                <span class="text-[10px] md:text-sm">Clientes</span>
+                            <button onclick="window.mudarAba('clientes')" class="${currentTab === 'clientes' ? 'bg-slate-800 text-cyan-400 md:border-l-4 border-cyan-500' : 'text-slate-400 hover:text-slate-200'} flex-1 md:flex-none flex flex-col md:flex-row items-center gap-1.5 md:gap-3.5 p-2.5 md:px-5 md:py-3.5 md:rounded-r-xl transition-all font-bold group">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <span class="text-[11px] md:text-sm">Clientes</span>
                             </button>
 
-                            <button onclick="window.handleLogout()" class="flex-1 md:hidden flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-red-400 font-bold">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                                <span class="text-[10px]">Sair</span>
+                            <button onclick="window.handleLogout()" class="flex-1 md:hidden flex flex-col items-center gap-1.5 p-2.5 text-slate-400 hover:text-red-400 font-bold">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                <span class="text-[11px]">Sair</span>
                             </button>
                         </nav>
                         
-                        <div class="hidden md:block p-4 border-t border-slate-800/80">
+                        <div class="hidden md:block p-4 border-t border-slate-800">
                             <button onclick="window.handleLogout()" class="w-full flex items-center gap-3 px-2 py-2 text-slate-500 hover:text-red-400 font-bold text-sm transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                 <span>Sair</span>
@@ -347,19 +342,19 @@
                                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Resultados consolidados por período</p>
                                     </div>
                                     
-                                    <div class="bg-slate-900/90 backdrop-blur-md rounded-xl p-1.5 border border-slate-800 flex items-center shadow-lg w-full sm:w-auto justify-between sm:justify-start">
+                                    <div class="bg-slate-900 rounded-xl p-1.5 border border-slate-800 flex items-center shadow-lg w-full sm:w-auto justify-between sm:justify-start">
                                         <span class="px-3 text-slate-400 text-xs font-bold uppercase">Mês:</span>
                                         <input type="month" value="${filtroMes}" onchange="window.mudarFiltro(this.value)" class="bg-slate-950 text-cyan-400 font-bold border border-slate-800 rounded-lg p-2 text-xs md:text-sm outline-none [color-scheme:dark] cursor-pointer">
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10">
-                                    <div class="bg-slate-900/80 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden">
+                                    <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden">
                                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Assinantes no Mês</h3>
                                         <p class="text-3xl md:text-4xl font-black text-white">${clientesFiltradosMes.length} <span class="text-xs text-slate-500 font-normal">ativos</span></p>
                                     </div>
                                     
-                                    <div class="bg-slate-900/80 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden">
+                                    <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden">
                                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Faturamento Bruto</h3>
                                         <p class="text-3xl md:text-4xl font-black text-white">
                                             <span class="text-lg text-slate-500">R$</span> ${totalBruto.toFixed(2)}
@@ -394,10 +389,10 @@
                                     </div>
                                 </div>
 
-                                <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-slate-800 flex-1 overflow-hidden flex flex-col mb-4">
+                                <div class="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 flex-1 overflow-hidden flex flex-col mb-4">
                                     <div class="overflow-x-auto flex-1">
                                         <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm">
-                                            <thead class="bg-slate-950/80 border-b border-slate-800 sticky top-0 z-10">
+                                            <thead class="bg-slate-950 border-b border-slate-800 sticky top-0 z-10">
                                                 <tr>
                                                     <th class="p-3.5 md:p-4 font-bold text-slate-400 uppercase">Cliente</th>
                                                     <th class="p-3.5 md:p-4 font-bold text-slate-400 uppercase">WhatsApp</th>
@@ -407,7 +402,7 @@
                                                     <th class="p-3.5 md:p-4 font-bold text-slate-400 uppercase text-right">Ações</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-800/60">
+                                            <tbody class="divide-y divide-slate-800">
                                                 ${clientesBusca.length === 0 ? `<tr><td colspan="6" class="p-8 text-center text-slate-500">Nenhum cliente encontrado.</td></tr>` : ''}
                                                 ${clientesBusca.map(c => {
                                                     const hojeStr = new Date().toISOString().split('T')[0];
