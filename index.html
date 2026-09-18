@@ -35,7 +35,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // Inicializar Supabase (COLOQUE SUAS CREDENCIAIS AQUI NOVAMENTE)
+        // Inicializar Supabase
         const supabaseUrl = 'https://ufeaaxhfbvwzdwrpnyuw.supabase.co';
         const supabaseKey = 'sb_publishable_dSEnTuEnicKoUkCBWMST4Q_8mVgy2Y_';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -50,7 +50,8 @@
             // Estados do Painel
             const [items, setItems] = useState([]);
             const [loading, setLoading] = useState(false);
-            const [abaAtiva, setAbaAtiva] = useState('novo');
+            const [abaAtiva, setAbaAtiva] = useState('novo'); // 'novo' ou 'lista'
+            const [filtroTipo, setFiltroTipo] = useState('todos'); // 'todos', 'codigo', 'link', 'arquivo'
             
             const [titulo, setTitulo] = useState('');
             const [tipo, setTipo] = useState('codigo');
@@ -59,12 +60,10 @@
             const [descricao, setDescricao] = useState('');
 
             useEffect(() => {
-                // Verifica a sessão atual ao carregar a página
                 supabase.auth.getSession().then(({ data: { session } }) => {
                     setSession(session);
                 });
 
-                // Fica escutando mudanças (login/logout)
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
                     setSession(session);
                 });
@@ -76,7 +75,6 @@
                 if (session) fetchItems();
             }, [session]);
 
-            // Função de Login
             const handleLogin = async (e) => {
                 e.preventDefault();
                 setLoadingAuth(true);
@@ -91,7 +89,6 @@
                 setLoadingAuth(false);
             };
 
-            // Função de Logout
             const handleLogout = async () => {
                 await supabase.auth.signOut();
             };
@@ -160,7 +157,13 @@
                 fetchItems();
             };
 
-            // TELA DE LOGIN (Mostrada se não houver sessão)
+            // Filtrar itens com base na aba selecionada
+            const itensFiltrados = items.filter(item => {
+                if (filtroTipo === 'todos') return true;
+                return item.tipo === filtroTipo;
+            });
+
+            // TELA DE LOGIN
             if (!session) {
                 return (
                     <div class="min-h-screen flex items-center justify-center p-4">
@@ -190,7 +193,7 @@
                 );
             }
 
-            // TELA DO PAINEL (Mostrada se estiver logado)
+            // TELA DO PAINEL
             return (
                 <div class="max-w-5xl mx-auto p-4 md:p-8">
                     {/* Cabeçalho */}
@@ -211,7 +214,6 @@
                                     <i class="ph ph-list mr-2"></i>Meus Itens
                                 </button>
                             </div>
-                            {/* Botão de Sair */}
                             <button onClick={handleLogout} class="text-slate-400 hover:text-red-400 transition-colors p-2" title="Sair do Sistema">
                                 <i class="ph ph-sign-out text-2xl"></i>
                             </button>
@@ -278,51 +280,82 @@
                             </form>
                         </div>
                     ) : (
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {items.map(item => (
-                                <div key={item.id} class="bg-darkCard p-5 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-600 transition-colors">
-                                    <div>
-                                        <div class="flex justify-between items-start mb-3">
-                                            <div class="flex items-center gap-2">
-                                                {item.tipo === 'codigo' && <span class="bg-orange-500/20 text-orange-400 p-1.5 rounded-lg"><i class="ph ph-hash text-xl"></i></span>}
-                                                {item.tipo === 'link' && <span class="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg"><i class="ph ph-link text-xl"></i></span>}
-                                                {item.tipo === 'arquivo' && <span class="bg-green-500/20 text-green-400 p-1.5 rounded-lg"><i class="ph ph-file-zip text-xl"></i></span>}
-                                                <h3 class="font-semibold text-lg text-white line-clamp-1">{item.titulo}</h3>
+                        <div>
+                            {/* Abas de Filtro de Navegação */}
+                            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                                <button 
+                                    onClick={() => setFiltroTipo('todos')}
+                                    class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${filtroTipo === 'todos' ? 'bg-slate-700 text-white' : 'bg-darkCard text-slate-400 hover:text-white border border-slate-800'}`}
+                                >
+                                    <i class="ph ph-squares-four text-lg"></i> Todos ({items.length})
+                                </button>
+                                <button 
+                                    onClick={() => setFiltroTipo('codigo')}
+                                    class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${filtroTipo === 'codigo' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-darkCard text-slate-400 hover:text-white border border-slate-800'}`}
+                                >
+                                    <i class="ph ph-hash text-lg"></i> Códigos
+                                </button>
+                                <button 
+                                    onClick={() => setFiltroTipo('link')}
+                                    class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${filtroTipo === 'link' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-darkCard text-slate-400 hover:text-white border border-slate-800'}`}
+                                >
+                                    <i class="ph ph-link text-lg"></i> Links
+                                </button>
+                                <button 
+                                    onClick={() => setFiltroTipo('arquivo')}
+                                    class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${filtroTipo === 'arquivo' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-darkCard text-slate-400 hover:text-white border border-slate-800'}`}
+                                >
+                                    <i class="ph ph-file-zip text-lg"></i> Arquivos
+                                </button>
+                            </div>
+
+                            {/* Grid de Itens Filtrados */}
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {itensFiltrados.map(item => (
+                                    <div key={item.id} class="bg-darkCard p-5 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-slate-600 transition-colors">
+                                        <div>
+                                            <div class="flex justify-between items-start mb-3">
+                                                <div class="flex items-center gap-2">
+                                                    {item.tipo === 'codigo' && <span class="bg-orange-500/20 text-orange-400 p-1.5 rounded-lg"><i class="ph ph-hash text-xl"></i></span>}
+                                                    {item.tipo === 'link' && <span class="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg"><i class="ph ph-link text-xl"></i></span>}
+                                                    {item.tipo === 'arquivo' && <span class="bg-green-500/20 text-green-400 p-1.5 rounded-lg"><i class="ph ph-file-zip text-xl"></i></span>}
+                                                    <h3 class="font-semibold text-lg text-white line-clamp-1">{item.titulo}</h3>
+                                                </div>
+                                                <button onClick={() => deletarItem(item.id, item.tipo, item.valor)} class="text-slate-500 hover:text-red-400 transition-colors">
+                                                    <i class="ph ph-trash text-xl"></i>
+                                                </button>
                                             </div>
-                                            <button onClick={() => deletarItem(item.id, item.tipo, item.valor)} class="text-slate-500 hover:text-red-400 transition-colors">
-                                                <i class="ph ph-trash text-xl"></i>
-                                            </button>
-                                        </div>
-                                        
-                                        {item.descricao && <p class="text-sm text-slate-400 mb-4 line-clamp-2">{item.descricao}</p>}
-                                        
-                                        <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center justify-between mt-auto">
-                                            <span class="text-white font-mono text-sm truncate mr-2">
-                                                {item.tipo === 'codigo' ? item.valor : 'Acessar URL / Arquivo'}
-                                            </span>
-                                            <button 
-                                                onClick={() => {
-                                                    if(item.tipo === 'codigo') {
-                                                        navigator.clipboard.writeText(item.valor);
-                                                        alert('Código copiado!');
-                                                    } else {
-                                                        window.open(item.valor, '_blank');
-                                                    }
-                                                }}
-                                                class="text-primary hover:text-blue-400"
-                                            >
-                                                {item.tipo === 'codigo' ? <i class="ph ph-copy text-xl"></i> : <i class="ph ph-arrow-square-out text-xl"></i>}
-                                            </button>
+                                            
+                                            {item.descricao && <p class="text-sm text-slate-400 mb-4 line-clamp-2">{item.descricao}</p>}
+                                            
+                                            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center justify-between mt-auto">
+                                                <span class="text-white font-mono text-sm truncate mr-2">
+                                                    {item.tipo === 'codigo' ? item.valor : 'Acessar URL / Arquivo'}
+                                                </span>
+                                                <button 
+                                                    onClick={() => {
+                                                        if(item.tipo === 'codigo') {
+                                                            navigator.clipboard.writeText(item.valor);
+                                                            alert('Código copiado!');
+                                                        } else {
+                                                            window.open(item.valor, '_blank');
+                                                        }
+                                                    }}
+                                                    class="text-primary hover:text-blue-400"
+                                                >
+                                                    {item.tipo === 'codigo' ? <i class="ph ph-copy text-xl"></i> : <i class="ph ph-arrow-square-out text-xl"></i>}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                            {items.length === 0 && (
-                                <div class="col-span-full text-center py-12 text-slate-500">
-                                    <i class="ph ph-empty text-5xl mb-3"></i>
-                                    <p>Nenhum item salvo ainda.</p>
-                                </div>
-                            )}
+                                ))}
+                                {itensFiltrados.length === 0 && (
+                                    <div class="col-span-full text-center py-12 text-slate-500">
+                                        <i class="ph ph-empty text-5xl mb-3"></i>
+                                        <p>Nenhum item encontrado nesta categoria.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
