@@ -330,21 +330,32 @@
                                             
                                             <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex items-center justify-between mt-auto">
                                                 <span class="text-white font-mono text-sm truncate mr-2">
-                                                    {item.tipo === 'codigo' ? item.valor : 'Acessar URL / Arquivo'}
+                                                    {item.tipo === 'codigo' ? item.valor : (item.tipo === 'link' ? 'Link Externo' : 'Arquivo Hospedado')}
                                                 </span>
-                                                <button 
-                                                    onClick={() => {
-                                                        if(item.tipo === 'codigo') {
+                                                <div class="flex items-center gap-2">
+                                                    {/* Botão de Copiar (Disponível para todos os tipos agora) */}
+                                                    <button 
+                                                        onClick={() => {
                                                             navigator.clipboard.writeText(item.valor);
-                                                            alert('Código copiado!');
-                                                        } else {
-                                                            window.open(item.valor, '_blank');
-                                                        }
-                                                    }}
-                                                    class="text-primary hover:text-blue-400"
-                                                >
-                                                    {item.tipo === 'codigo' ? <i class="ph ph-copy text-xl"></i> : <i class="ph ph-arrow-square-out text-xl"></i>}
-                                                </button>
+                                                            alert(item.tipo === 'codigo' ? 'Código copiado!' : 'URL copiada para a área de transferência!');
+                                                        }}
+                                                        class="text-slate-400 hover:text-white transition-colors p-1"
+                                                        title="Copiar URL/Código"
+                                                    >
+                                                        <i class="ph ph-copy text-xl"></i>
+                                                    </button>
+
+                                                    {/* Botão de Abrir (Apenas para Links e Arquivos) */}
+                                                    {item.tipo !== 'codigo' && (
+                                                        <button 
+                                                            onClick={() => window.open(item.valor, '_blank')}
+                                                            class="text-primary hover:text-blue-400 transition-colors p-1"
+                                                            title="Abrir em Nova Aba"
+                                                        >
+                                                            <i class="ph ph-arrow-square-out text-xl"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
